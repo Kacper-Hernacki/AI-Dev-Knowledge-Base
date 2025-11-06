@@ -1,0 +1,14 @@
+# Dependencies
+node_modules/
+
+# Builds
+dist/
+.turbo/
+
+# Env
+.env
+.env.*
+.env/**
+
+# Misc
+.DS_Store

@@ -1,0 +1,35 @@
+{
+  "name": "langchain-lesson",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx --watch --env-file=.env src/index.ts",
+    "start": "tsx --env-file=.env src/index.ts",
+    "typecheck": "tsc --noEmit",
+    "lessons:agents": "tsx lessons/agents/index.ts",
+    "test": "vitest",
+    "test:watch": "vitest --watch",
+    "test:coverage": "vitest run --coverage",
+    "test:unit": "vitest run lessons/agents/tests/",
+    "test:api": "tsx test-api.ts",
+    "test:integration": "npm run test:unit && npm run test:api"
+  },
+  "devDependencies": {
+    "@types/node": "^22.8.0",
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.4"
+  },
+  "dependencies": {
+    "@langchain/core": "^1.0.3",
+    "@langchain/openai": "^1.0.0",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.5",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "langchain": "^1.0.2",
+    "tsx": "^4.20.6",
+    "zod": "^4.1.12"
+  }
+}
