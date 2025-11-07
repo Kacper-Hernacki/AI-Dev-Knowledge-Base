@@ -8,17 +8,13 @@
     "start": "tsx --env-file=.env src/index.ts",
     "typecheck": "tsc --noEmit",
     "lessons:agents": "tsx lessons/agents/index.ts",
-    "test": "vitest",
-    "test:watch": "vitest --watch",
-    "test:coverage": "vitest run --coverage",
-    "test:unit": "vitest run lessons/agents/tests/",
-    "test:api": "tsx test-api.ts",
-    "test:integration": "npm run test:unit && npm run test:api"
+    "test": "bun test",
+    "test:watch": "bun test --watch",
+    "test:unit": "bun test lessons/agents/tests/"
   },
   "devDependencies": {
     "@types/node": "^22.8.0",
-    "typescript": "^5.6.3",
-    "vitest": "^2.1.4"
+    "typescript": "^5.6.3"
   },
   "dependencies": {
     "@langchain/core": "^1.0.3",

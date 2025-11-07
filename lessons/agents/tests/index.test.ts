@@ -1,12 +1,14 @@
 import { describe, test, expect } from "vitest";
 import z from "zod/v3";
+import { agent } from "../index.js";
+import { HumanMessage } from "langchain";
 
 describe("Agent Configuration", () => {
   describe("structured format schema", () => {
     const structuredFormat = z.object({
       title: z.string().describe("The title of the article"),
-      subtitle: z.string().describe("The content of the article"),
-      content: z.string().describe("The author of the article"),
+      subtitle: z.string().describe("The subtitle of the article"),
+      content: z.string().describe("The content of the article"),
       readingTime: z.number().describe("The reading time of the article in minutes"),
       date: z.string().describe("The date of the article"),
     });
@@ -107,4 +109,41 @@ describe("Agent Configuration", () => {
       expect(() => contextSchema.parse(validContextExpert)).not.toThrow();
     });
   });
+});
+
+describe("Agent Invocation", () => {
+  test("should return a structured response via manual parsing workaround", async () => {
+    const result = await agent.invoke(
+      {
+        messages: [
+          new HumanMessage("Write a short article about the benefits of machine learning"),
+        ],
+        userPreferences: {},
+      },
+      { context: { userRole: "beginner" } }
+    );
+
+    // Manually parse the structured response from the last message
+    const lastMessage = result.messages.at(-1);
+    expect(lastMessage).toBeDefined();
+    expect(lastMessage?.content).toBeTypeOf("string");
+
+    let parsedJson;
+    try {
+      parsedJson = JSON.parse(lastMessage!.content as string);
+    } catch (e) {
+      // Fail the test if JSON parsing fails
+      expect.fail("Failed to parse the content of the last AIMessage as JSON.");
+    }
+
+    const structuredResponse = parsedJson.structuredResponse;
+
+    // Assert that the parsed response has the expected structure
+    expect(structuredResponse).toBeTypeOf("object");
+    expect(structuredResponse).toHaveProperty("title");
+    expect(structuredResponse).toHaveProperty("subtitle");
+    expect(structuredResponse).toHaveProperty("content");
+    expect(structuredResponse).toHaveProperty("readingTime");
+    expect(structuredResponse).toHaveProperty("date");
+  }, 30000); // 30-second timeout for the agent invocation
 });

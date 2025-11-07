@@ -1,11 +1,7 @@
-import {
-  createMiddleware,
-  ToolMessage,
-  AIMessage,
-} from "langchain";
+import { createMiddleware, ToolMessage, AIMessage } from "langchain";
 import { SystemMessage } from "@langchain/core/messages";
 import { advancedModel, basicModel } from "./models.js";
-import z from "zod";
+import z from "zod/v3";
 
 // DynamicModelSelection middleware: returns AIMessage properly
 const dynamicModelSelection = createMiddleware({
@@ -53,6 +49,7 @@ const contextSchema = z.object({
 // Custom dynamicSystemPrompt middleware with proper wrapModelCall
 const dynamicSystemPrompt = createMiddleware({
   name: "DynamicSystemPromptMiddleware",
+  contextSchema, // Add this to inform TypeScript about the context type
   wrapModelCall: async (request, handler) => {
     // Call your function to get the prompt string
     const userRole = request.runtime.context.userRole || "beginner";
@@ -65,8 +62,8 @@ const dynamicSystemPrompt = createMiddleware({
         "You are a friendly AI tutor. Explain concepts clearly with simple language.";
     }
 
-    // Wrap prompt into AIMessage and prepend to messages
-    const systemMessage = new AIMessage({ content: systemPrompt });
+    // Wrap prompt into SystemMessage and prepend to messages
+    const systemMessage = new SystemMessage(systemPrompt);
     const newRequest = {
       ...request,
       messages: [systemMessage, ...request.messages],
