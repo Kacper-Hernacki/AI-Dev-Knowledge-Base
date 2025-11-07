@@ -251,7 +251,7 @@ export async function demonstratePerformanceMonitoring(): Promise<void> {
     await service.generateText("Quick test 1");
     await service.generateText("Quick test 2");
     await service.classifyText("This is a technology article", ["Tech", "Sports"]);
-    
+
     // Get performance summary
     const summary = Logger.getPerformanceSummary();
     console.log("\n📈 Performance Summary:");
@@ -270,6 +270,360 @@ export async function demonstratePerformanceMonitoring(): Promise<void> {
 }
 
 /**
+ * Demonstrate multimodal capabilities (image processing)
+ */
+export async function demonstrateMultimodal(): Promise<void> {
+  console.log("\n🖼️  Multimodal Demo");
+  console.log("=".repeat(50));
+
+  try {
+    const model = await ModelFactory.createModel({
+      model: MODEL_CONFIG.models.openai.gpt4Mini
+    });
+
+    console.log("\n📸 Processing image with text prompt:");
+
+    // Example with image URL
+    const imageUrl = "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Cat03.jpg/481px-Cat03.jpg";
+
+    const response = await model.invoke([
+      {
+        role: "user",
+        content: [
+          { type: "text", text: "Describe what you see in this image in detail." },
+          { type: "image_url", image_url: { url: imageUrl } }
+        ]
+      }
+    ]);
+
+    console.log(`\n🤖 Response: ${response.content.toString().slice(0, 300)}...`);
+
+    // Check if response contains multiple content blocks
+    if (response.content && typeof response.content === 'object') {
+      console.log("\n📦 Response content blocks:");
+      console.log(JSON.stringify(response.content, null, 2).slice(0, 200));
+    }
+
+  } catch (error) {
+    console.error("❌ Multimodal demo failed:", error);
+    console.log("ℹ️  Note: Multimodal features require a model that supports vision (e.g., gpt-4o, gpt-4-vision)");
+  }
+}
+
+/**
+ * Demonstrate reasoning capabilities
+ */
+export async function demonstrateReasoning(): Promise<void> {
+  console.log("\n🧠 Reasoning Demo");
+  console.log("=".repeat(50));
+
+  try {
+    const model = await ModelFactory.createModel({
+      model: MODEL_CONFIG.models.openai.gpt4Mini
+    });
+
+    const complexQuestion = "If a train leaves Station A at 2 PM traveling at 60 mph, and another train leaves Station B (180 miles away) at 2:30 PM traveling at 90 mph toward Station A, when and where will they meet?";
+
+    console.log(`\n📝 Complex question: ${complexQuestion}`);
+    console.log("\n🔄 Streaming reasoning process:");
+
+    const stream = await model.stream(complexQuestion);
+
+    let fullResponse = "";
+    for await (const chunk of stream) {
+      if (chunk.content) {
+        const content = chunk.content.toString();
+        fullResponse += content;
+        process.stdout.write(content);
+      }
+    }
+
+    console.log("\n\n✅ Reasoning completed");
+    console.log(`📊 Response length: ${fullResponse.length} characters`);
+
+  } catch (error) {
+    console.error("❌ Reasoning demo failed:", error);
+  }
+}
+
+/**
+ * Demonstrate local model usage with Ollama
+ */
+export async function demonstrateLocalModels(): Promise<void> {
+  console.log("\n💻 Local Models Demo (Ollama)");
+  console.log("=".repeat(50));
+
+  try {
+    // Note: This requires Ollama to be installed and running locally
+    // Installation: https://ollama.ai
+
+    console.log("\nℹ️  This demo requires Ollama to be installed and running");
+    console.log("📥 Install from: https://ollama.ai");
+    console.log("🚀 Run: ollama run llama2");
+
+    // Example code (commented out to avoid runtime errors if Ollama is not installed)
+    /*
+    const { ChatOllama } = await import("@langchain/community/chat_models/ollama");
+
+    const localModel = new ChatOllama({
+      baseUrl: "http://localhost:11434",
+      model: "llama2",
+    });
+
+    const response = await localModel.invoke("Why is the sky blue? Answer in one sentence.");
+    console.log(`\n🤖 Local model response: ${response.content}`);
+    */
+
+    console.log("\n💡 Example usage:");
+    console.log(`
+    import { ChatOllama } from "@langchain/community/chat_models/ollama";
+
+    const model = new ChatOllama({
+      baseUrl: "http://localhost:11434",
+      model: "llama2",
+    });
+
+    const response = await model.invoke("Your question here");
+    `);
+
+  } catch (error) {
+    console.error("❌ Local models demo failed:", error);
+  }
+}
+
+/**
+ * Demonstrate prompt caching
+ */
+export async function demonstratePromptCaching(): Promise<void> {
+  console.log("\n💾 Prompt Caching Demo");
+  console.log("=".repeat(50));
+
+  try {
+    const model = await ModelFactory.createModel({
+      model: MODEL_CONFIG.models.openai.gpt4Mini
+    });
+
+    // Create a long system context that we want to cache
+    const longContext = `
+You are an expert software engineer with deep knowledge of:
+${Array.from({ length: 20 }, (_, i) => `- Technology ${i + 1}: Description and use cases`).join('\n')}
+
+Please provide detailed, technical responses based on this knowledge.
+    `.trim();
+
+    console.log("\n🔄 First request (populates cache):");
+    const start1 = Date.now();
+    const response1 = await model.invoke([
+      { role: "system", content: longContext },
+      { role: "user", content: "What is TypeScript?" }
+    ]);
+    const time1 = Date.now() - start1;
+    console.log(`⏱️  Time: ${time1}ms`);
+    console.log(`📝 Response: ${response1.content.toString().slice(0, 150)}...`);
+
+    console.log("\n🔄 Second request (should use cache):");
+    const start2 = Date.now();
+    const response2 = await model.invoke([
+      { role: "system", content: longContext },
+      { role: "user", content: "What is Python?" }
+    ]);
+    const time2 = Date.now() - start2;
+    console.log(`⏱️  Time: ${time2}ms`);
+    console.log(`📝 Response: ${response2.content.toString().slice(0, 150)}...`);
+
+    console.log(`\n📊 Performance improvement: ${((time1 - time2) / time1 * 100).toFixed(1)}%`);
+    console.log("ℹ️  Note: OpenAI and Gemini provide implicit prompt caching");
+
+  } catch (error) {
+    console.error("❌ Prompt caching demo failed:", error);
+  }
+}
+
+/**
+ * Demonstrate server-side tool use
+ */
+export async function demonstrateServerSideTools(): Promise<void> {
+  console.log("\n🛠️  Server-Side Tool Use Demo");
+  console.log("=".repeat(50));
+
+  try {
+    console.log("\nℹ️  Server-side tool calling allows models to use built-in tools");
+    console.log("   (like web search, code interpreters) in a single turn");
+
+    // Note: This feature is available in models like GPT-4 with specific configurations
+    console.log("\n💡 Example usage:");
+    console.log(`
+    import { initChatModel } from "langchain";
+
+    const model = await initChatModel("gpt-4.1-mini");
+    const modelWithTools = model.bindTools([{ type: "web_search" }]);
+
+    const message = await modelWithTools.invoke(
+      "What was a positive news story from today?"
+    );
+
+    console.log(message.contentBlocks);
+    // Shows tool calls and results in the response
+    `);
+
+    console.log("\n📋 Benefits:");
+    console.log("  • Single conversational turn (no tool execution loop needed)");
+    console.log("  • Built-in tools like web search, code execution");
+    console.log("  • Results automatically included in response");
+
+  } catch (error) {
+    console.error("❌ Server-side tools demo failed:", error);
+  }
+}
+
+/**
+ * Demonstrate log probabilities
+ */
+export async function demonstrateLogProbabilities(): Promise<void> {
+  console.log("\n📈 Log Probabilities Demo");
+  console.log("=".repeat(50));
+
+  try {
+    const { ChatOpenAI } = await import("@langchain/openai");
+
+    const model = new ChatOpenAI({
+      model: "gpt-4o",
+      logprobs: true,
+      topLogprobs: 3
+    });
+
+    console.log("\n📝 Generating response with log probabilities...");
+    const response = await model.invoke("The capital of France is");
+
+    console.log(`\n🤖 Response: ${response.content}`);
+
+    // Access log probabilities from response metadata
+    if (response.response_metadata?.logprobs) {
+      console.log("\n📊 Token probabilities (first 5 tokens):");
+      const logprobs = response.response_metadata.logprobs as any;
+
+      if (logprobs.content && Array.isArray(logprobs.content)) {
+        logprobs.content.slice(0, 5).forEach((tokenData: any, idx: number) => {
+          console.log(`\n  Token ${idx + 1}: "${tokenData.token}"`);
+          console.log(`  Log probability: ${tokenData.logprob?.toFixed(4)}`);
+          console.log(`  Probability: ${(Math.exp(tokenData.logprob) * 100).toFixed(2)}%`);
+
+          if (tokenData.top_logprobs && tokenData.top_logprobs.length > 0) {
+            console.log(`  Top alternatives:`);
+            tokenData.top_logprobs.slice(0, 2).forEach((alt: any) => {
+              console.log(`    - "${alt.token}": ${(Math.exp(alt.logprob) * 100).toFixed(2)}%`);
+            });
+          }
+        });
+      }
+    }
+
+    console.log("\n💡 Use cases:");
+    console.log("  • Measure model confidence");
+    console.log("  • Detect hallucinations");
+    console.log("  • Build calibrated systems");
+
+  } catch (error) {
+    console.error("❌ Log probabilities demo failed:", error);
+    console.log("ℹ️  Note: This feature requires @langchain/openai and a compatible model");
+  }
+}
+
+/**
+ * Demonstrate token usage tracking
+ */
+export async function demonstrateTokenUsage(): Promise<void> {
+  console.log("\n🔢 Token Usage Tracking Demo");
+  console.log("=".repeat(50));
+
+  try {
+    const model = await ModelFactory.createModel({
+      model: MODEL_CONFIG.models.openai.gpt4Mini
+    });
+
+    const prompt = "Explain the concept of recursion in programming with an example.";
+    console.log(`\n📝 Prompt: ${prompt}`);
+
+    const response = await model.invoke(prompt);
+
+    console.log(`\n🤖 Response: ${response.content.toString().slice(0, 200)}...`);
+
+    // Access token usage information
+    if (response.usage_metadata) {
+      console.log("\n📊 Token Usage:");
+      console.log(`  • Input tokens: ${response.usage_metadata.input_tokens}`);
+      console.log(`  • Output tokens: ${response.usage_metadata.output_tokens}`);
+      console.log(`  • Total tokens: ${response.usage_metadata.total_tokens}`);
+
+      // Calculate approximate cost (example pricing for GPT-4o-mini)
+      const inputCost = (response.usage_metadata.input_tokens / 1000000) * 0.15; // $0.15 per 1M tokens
+      const outputCost = (response.usage_metadata.output_tokens / 1000000) * 0.60; // $0.60 per 1M tokens
+      const totalCost = inputCost + outputCost;
+
+      console.log(`\n💰 Estimated Cost (GPT-4o-mini pricing):`);
+      console.log(`  • Input: $${inputCost.toFixed(6)}`);
+      console.log(`  • Output: $${outputCost.toFixed(6)}`);
+      console.log(`  • Total: $${totalCost.toFixed(6)}`);
+    } else if (response.response_metadata) {
+      console.log("\n📊 Response Metadata:");
+      console.log(JSON.stringify(response.response_metadata, null, 2));
+    }
+
+  } catch (error) {
+    console.error("❌ Token usage demo failed:", error);
+  }
+}
+
+/**
+ * Demonstrate invocation configuration
+ */
+export async function demonstrateInvocationConfig(): Promise<void> {
+  console.log("\n⚙️  Invocation Configuration Demo");
+  console.log("=".repeat(50));
+
+  try {
+    const model = await ModelFactory.createModel({
+      model: MODEL_CONFIG.models.openai.gpt4Mini
+    });
+
+    console.log("\n🔧 Using custom configuration:");
+
+    const response = await model.invoke(
+      "Tell me a short joke about programming",
+      {
+        runName: "joke_generation",
+        tags: ["humor", "demo", "programming"],
+        metadata: {
+          user_id: "123",
+          session_id: "abc-456",
+          environment: "development"
+        },
+        // Additional config options
+        maxConcurrency: 5
+      }
+    );
+
+    console.log(`\n🤖 Response: ${response.content}`);
+
+    console.log("\n📋 Configuration benefits:");
+    console.log("  • runName: Custom identifier for this invocation");
+    console.log("  • tags: Categorization for filtering and organization");
+    console.log("  • metadata: Custom tracking data");
+    console.log("  • callbacks: Event handlers for monitoring");
+    console.log("  • maxConcurrency: Control parallel execution in batch()");
+
+    console.log("\n💡 Use cases:");
+    console.log("  • Debugging with LangSmith tracing");
+    console.log("  • Custom logging and monitoring");
+    console.log("  • Resource usage control in production");
+    console.log("  • Tracking across complex pipelines");
+
+  } catch (error) {
+    console.error("❌ Invocation config demo failed:", error);
+  }
+}
+
+/**
  * Run all examples
  */
 export async function runAllExamples(): Promise<void> {
@@ -277,13 +631,24 @@ export async function runAllExamples(): Promise<void> {
   console.log("=".repeat(60));
 
   const examples = [
+    // Core examples
     demonstrateTextGeneration,
     demonstrateStreaming,
     demonstrateStructuredOutput,
     demonstrateBatchProcessing,
     demonstrateConversation,
     demonstrateModelComparison,
-    demonstratePerformanceMonitoring
+    demonstratePerformanceMonitoring,
+
+    // Advanced examples
+    demonstrateMultimodal,
+    demonstrateReasoning,
+    demonstrateLocalModels,
+    demonstratePromptCaching,
+    demonstrateServerSideTools,
+    demonstrateLogProbabilities,
+    demonstrateTokenUsage,
+    demonstrateInvocationConfig
   ];
 
   for (const example of examples) {
