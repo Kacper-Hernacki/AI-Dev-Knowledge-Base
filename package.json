@@ -7,21 +7,17 @@
     "dev": "tsx --watch --env-file=.env src/index.ts",
     "start": "tsx --env-file=.env src/index.ts",
     "typecheck": "tsc --noEmit",
-    
-    "agents:demo": "bun --env-file=.env lessons/agents/demo.ts",
-    "agents:test": "bun test lessons/agents/tests/",
-    "agents:test:watch": "bun test --watch lessons/agents/tests/",
-    "agents:examples": "bun --env-file=.env lessons/agents/examples/index.ts",
-    
-    "models:demo": "bun --env-file=.env lessons/models/demo.ts",
-    "models:test": "bun test lessons/models/tests/",
-    "models:test:watch": "bun test --watch lessons/models/tests/",
-    "models:examples": "bun --env-file=.env lessons/models/examples/index.ts",
-    
+    "agents:demo": "bun --env-file=.env lessons/langchain/core-concepts/agents/demo.ts",
+    "agents:test": "bun test lessons/langchain/core-concepts/agents/tests/",
+    "agents:test:watch": "bun test --watch lessons/langchain/core-concepts/agents/tests/",
+    "agents:examples": "bun --env-file=.env lessons/langchain/core-concepts/agents/examples/index.ts",
+    "models:demo": "bun --env-file=.env lessons/langchain/core-concepts/models/demo.ts",
+    "models:test": "bun test lessons/langchain/core-concepts/models/tests/",
+    "models:test:watch": "bun test --watch lessons/langchain/core-concepts/models/tests/",
+    "models:examples": "bun --env-file=.env lessons/langchain/core-concepts/models/examples/index.ts",
     "test": "bun test",
     "test:watch": "bun test --watch",
     "test:all": "bun test lessons/",
-    
     "lessons:run": "echo 'Usage: bun run <lesson>:demo | <lesson>:test | <lesson>:examples'",
     "lessons:list": "ls -la lessons/"
   },

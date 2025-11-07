@@ -10,6 +10,10 @@
     "forceConsistentCasingInFileNames": true,
     "types": ["bun-types", "node"]
   },
-  "include": ["src/**/*", "lessons/**/*.ts", "lessons/agents/tests/globals.d.ts"],
+  "include": [
+    "src/**/*",
+    "lessons/**/*.ts",
+    "lessons/langchain/agents/tests/globals.d.ts"
+  ],
   "exclude": ["node_modules", "dist"]
 }
