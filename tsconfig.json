@@ -8,8 +8,8 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "types": ["node", "vitest"]
+    "types": ["bun-types", "node"]
   },
-  "include": ["src/**/*", "lessons/**/*.ts"],
+  "include": ["src/**/*", "lessons/**/*.ts", "lessons/agents/tests/globals.d.ts"],
   "exclude": ["node_modules", "dist"]
 }

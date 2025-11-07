@@ -1,73 +1,80 @@
 # Agent Testing Structure
 
 ## Overview
-This directory contains comprehensive unit tests for all agent components, using Vitest for a Node.js-based workflow.
+
+This directory contains comprehensive unit tests for the refactored agent architecture, using Bun's native test runner for optimal performance.
 
 ## Test Files
 
 ### 🛠️ `tools.test.ts`
+
 Tests for agent tools:
-- Search tool functionality and schema validation
-- Weather tool functionality and schema validation
-- Input/output validation
-- Error handling
+
+- **Search tool** - Information retrieval functionality and schema validation
+- **Deep Research tool** - Comprehensive analysis and multi-faceted insights
+- **Legacy compatibility** - Backward compatibility with getWeather alias
+- Input/output validation and error handling
 
 ### 🔗 `middlewares.test.ts`
-Tests for agent middlewares:
-- Context schema validation (expert/beginner roles)
-- Dynamic system prompt middleware
-- Dynamic model selection middleware
-- Tool error handling middleware
+
+Tests for agent middlewares (refactored structure):
+
+- **Context schema validation** - Expert/beginner role handling
+- **Dynamic system prompt** - Role-based prompt adaptation
+- **Dynamic model selection** - Complexity-based model switching
+- **Error handling** - Robust tool error recovery
 
 ### 🤖 `models.test.ts`
-Tests for AI models:
-- Basic model (gpt-4o-mini) configuration
-- Advanced model (gpt-4o) configuration
-- Model differentiation
-- Instance validation
+
+Tests for AI models (moved to config):
+
+- **Basic model** (gpt-4o-mini) configuration and validation
+- **Advanced model** (gpt-4o) configuration and validation
+- **Environment validation** - API key and configuration checks
+- **Model differentiation** - Separate instances and configs
 
 ### ⚙️ `index.test.ts`
-Tests for agent configuration:
-- Structured response format schema
-- Component integration
-- Import validation
-- Message and context structure
+
+Tests for the new architecture:
+
+- **AgentFactory** - Factory pattern for agent creation
+- **AgentService** - High-level business operations
+- **ResponseParser** - JSON parsing and error handling
+- **Schema validation** - Structured response format
+- **Integration testing** - Component interaction
 
 ## Running Tests
 
 ```bash
 # Run all agent unit tests
-npm run test:unit
+bun test
 
 # Run specific test file
-npx vitest run lessons/agents/tests/tools.test.ts
+bun test lessons/agents/tests/tools.test.ts
 
 # Run tests in watch mode
-npm run test:watch
+bun test --watch
 
-# Run with coverage
-npm run test:coverage
+# Run unit tests only
+bun test lessons/agents/tests/
 ```
 
 ## Test Features
 
-✅ **Proper assertions** - Uses `expect()` with real pass/fail conditions  
-✅ **Isolated testing** - Each component tested independently  
+✅ **Clean Architecture** - Tests follow the new modular structure  
+✅ **Factory Pattern** - Validates AgentFactory and AgentService  
+✅ **Tool Integration** - Tests search and deepResearch tools  
 ✅ **Schema validation** - Tests Zod schemas and type safety  
 ✅ **Error handling** - Tests both success and failure scenarios  
-✅ **Fast execution** - Vitest-powered test runner  
+✅ **Fast execution** - Bun's native test runner for optimal performance  
 ✅ **TypeScript support** - Full type checking in tests  
+✅ **Legacy compatibility** - Ensures backward compatibility
 
-## API Integration Tests
+## New Architecture Features Tested
 
-For API endpoint testing, use:
-```bash
-# Run API integration tests (requires running server)
-npm run test:api
-```
-
-See `../../test-api.ts` for comprehensive API endpoint testing including:
-- Health endpoint validation
-- Agent invoke endpoint testing
-- Error handling validation
-- CORS header verification
+🏭 **Factory Pattern** - AgentFactory.createArticleAgent() and variants  
+🔧 **Service Layer** - AgentService business logic and operations  
+📊 **Response Parsing** - Structured JSON response handling  
+🛡️ **Error Recovery** - Graceful failure handling throughout  
+🎯 **Role-based Logic** - Expert vs Beginner response differentiation  
+🔍 **Deep Research** - Advanced analysis beyond basic search

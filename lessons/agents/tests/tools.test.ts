@@ -1,24 +1,27 @@
-import { describe, test, expect } from "vitest";
-import { search, getWeather } from "../tools.js";
+/// <reference path="./globals.d.ts" />
+
+import { search, deepResearch } from "../core/tools/index.js";
 
 describe("Agent Tools", () => {
   describe("search tool", () => {
     test("should have correct name and description", () => {
       expect(search.name).toBe("search");
-      expect(search.description).toBe("Search for information");
+      expect(search.description).toBe(
+        "Search for current information on any topic. Use this when you need up-to-date information."
+      );
     });
 
     test("should return search results for a query", async () => {
       const result = await search.invoke({ query: "LangChain framework" });
-      expect(result).toBe("Results for: LangChain framework");
+      expect(result).toContain('Search results for "LangChain framework"');
     });
 
     test("should handle different queries", async () => {
       const testQueries = ["AI", "machine learning", "test query"];
-      
+
       for (const query of testQueries) {
         const result = await search.invoke({ query });
-        expect(result).toBe(`Results for: ${query}`);
+        expect(result).toContain(`Search results for "${query}"`);
       }
     });
 
@@ -38,39 +41,53 @@ describe("Agent Tools", () => {
     });
   });
 
-  describe("getWeather tool", () => {
+  describe("deepResearch tool", () => {
     test("should have correct name and description", () => {
-      expect(getWeather.name).toBe("get_weather");
-      expect(getWeather.description).toBe("Get weather information for a location");
+      expect(deepResearch.name).toBe("deep_research");
+      expect(deepResearch.description).toBe(
+        "Conduct comprehensive research and analysis on complex topics. Use when you need detailed, multi-faceted insights beyond basic search."
+      );
     });
 
-    test("should return weather information for a location", async () => {
-      const result = await getWeather.invoke({ location: "New York" });
-      expect(result).toBe("Weather in New York: Sunny, 72°F");
+    test("should return research analysis for a topic", async () => {
+      const result = await deepResearch.invoke({
+        topic: "machine learning",
+        focus: "applications",
+      });
+      expect(result).toContain(
+        "Comprehensive analysis of machine learning reveals multiple key insights:"
+      );
+      expect(result).toContain("applications");
     });
 
-    test("should handle different locations", async () => {
-      const testLocations = ["London", "Tokyo", "Paris"];
-      
-      for (const location of testLocations) {
-        const result = await getWeather.invoke({ location });
-        expect(result).toBe(`Weather in ${location}: Sunny, 72°F`);
+    test("should handle different topics", async () => {
+      const testTopics = ["AI", "blockchain", "quantum computing"];
+
+      for (const topic of testTopics) {
+        const result = await deepResearch.invoke({ topic, focus: "applications" });
+        expect(result).toContain(`Comprehensive analysis of ${topic} reveals`);
       }
     });
 
     test("should have valid schema", () => {
-      expect(getWeather.schema).toBeDefined();
-      expect(getWeather.schema.shape.location).toBeDefined();
+      expect(deepResearch.schema).toBeDefined();
+      expect(deepResearch.schema.shape.topic).toBeDefined();
+      expect(deepResearch.schema.shape.focus).toBeDefined();
     });
 
     test("should validate schema with valid input", () => {
-      const validInput = { location: "Berlin" };
-      expect(() => getWeather.schema.parse(validInput)).not.toThrow();
+      const validInput = { topic: "AI", focus: "ethics" };
+      expect(() => deepResearch.schema.parse(validInput)).not.toThrow();
+    });
+
+    test("should validate schema with focus parameter", () => {
+      const validInput = { topic: "AI", focus: "applications" };
+      expect(() => deepResearch.schema.parse(validInput)).not.toThrow();
     });
 
     test("should reject invalid schema input", () => {
-      const invalidInput = { location: 123 }; // should be string
-      expect(() => getWeather.schema.parse(invalidInput)).toThrow();
+      const invalidInput = { topic: 123 }; // should be string
+      expect(() => deepResearch.schema.parse(invalidInput)).toThrow();
     });
   });
 });

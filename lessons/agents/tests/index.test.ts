@@ -1,17 +1,16 @@
-import { describe, test, expect } from "vitest";
-import z from "zod/v3";
-import { agent } from "../index.js";
-import { HumanMessage } from "langchain";
+/// <reference path="./globals.d.ts" />
+
+import { 
+  AgentFactory, 
+  AgentService, 
+  articleSchema,
+  USER_ROLES,
+  ResponseParser
+} from "../index.js";
 
 describe("Agent Configuration", () => {
   describe("structured format schema", () => {
-    const structuredFormat = z.object({
-      title: z.string().describe("The title of the article"),
-      subtitle: z.string().describe("The subtitle of the article"),
-      content: z.string().describe("The content of the article"),
-      readingTime: z.number().describe("The reading time of the article in minutes"),
-      date: z.string().describe("The date of the article"),
-    });
+    const structuredFormat = articleSchema;
 
     test("should validate correct data structure", () => {
       const validData = {
@@ -59,11 +58,13 @@ describe("Agent Configuration", () => {
 
   describe("agent imports", () => {
     test("should import tools successfully", async () => {
-      const { search, getWeather } = await import("../tools.js");
+      const { search, deepResearch, getWeather } = await import("../core/tools/index.js");
       expect(search).toBeDefined();
+      expect(deepResearch).toBeDefined();
       expect(getWeather).toBeDefined();
       expect(search.name).toBe("search");
-      expect(getWeather.name).toBe("get_weather");
+      expect(deepResearch.name).toBe("deep_research");
+      expect(getWeather.name).toBe("deep_research"); // legacy alias
     });
 
     test("should import middlewares successfully", async () => {
@@ -72,7 +73,7 @@ describe("Agent Configuration", () => {
         dynamicModelSelection,
         dynamicSystemPrompt,
         handleToolErrors,
-      } = await import("../middlewares.js");
+      } = await import("../core/middlewares/index.js");
 
       expect(contextSchema).toBeDefined();
       expect(dynamicModelSelection).toBeDefined();
@@ -81,7 +82,7 @@ describe("Agent Configuration", () => {
     });
 
     test("should import models successfully", async () => {
-      const { basicModel, advancedModel } = await import("../models.js");
+      const { basicModel, advancedModel } = await import("../config/models.js");
       expect(basicModel).toBeDefined();
       expect(advancedModel).toBeDefined();
     });
@@ -100,7 +101,7 @@ describe("Agent Configuration", () => {
     });
 
     test("should validate context format", async () => {
-      const { contextSchema } = await import("../middlewares.js");
+      const { contextSchema } = await import("../core/middlewares/index.js");
       
       const validContextBeginner = { userRole: "beginner" as const };
       const validContextExpert = { userRole: "expert" as const };
@@ -111,39 +112,89 @@ describe("Agent Configuration", () => {
   });
 });
 
-describe("Agent Invocation", () => {
-  test("should return a structured response via manual parsing workaround", async () => {
-    const result = await agent.invoke(
-      {
-        messages: [
-          new HumanMessage("Write a short article about the benefits of machine learning"),
-        ],
-        userPreferences: {},
-      },
-      { context: { userRole: "beginner" } }
+describe("Agent Factory and Service", () => {
+  test("should create agent using AgentFactory", () => {
+    const agent = AgentFactory.createArticleAgent();
+    expect(agent).toBeDefined();
+  });
+
+  test("should create advanced agent using AgentFactory", () => {
+    const agent = AgentFactory.createAdvancedAgent();
+    expect(agent).toBeDefined();
+  });
+
+  test("should return a structured response using AgentService", async () => {
+    const agent = AgentFactory.createArticleAgent();
+    const service = new AgentService(agent);
+
+    const response = await service.generateArticle(
+      "Write a short article about the benefits of machine learning",
+      USER_ROLES.BEGINNER
     );
 
-    // Manually parse the structured response from the last message
-    const lastMessage = result.messages.at(-1);
-    expect(lastMessage).toBeDefined();
-    expect(lastMessage?.content).toBeTypeOf("string");
+    expect(response).toBeDefined();
+    expect(response.structuredResponse).toBeTypeOf("object");
+    expect(response.structuredResponse).toHaveProperty("title");
+    expect(response.structuredResponse).toHaveProperty("subtitle");
+    expect(response.structuredResponse).toHaveProperty("content");
+    expect(response.structuredResponse).toHaveProperty("readingTime");
+    expect(response.structuredResponse).toHaveProperty("date");
+    expect(response.messages).toBeDefined();
+  }, 30000);
 
-    let parsedJson;
-    try {
-      parsedJson = JSON.parse(lastMessage!.content as string);
-    } catch (e) {
-      // Fail the test if JSON parsing fails
-      expect.fail("Failed to parse the content of the last AIMessage as JSON.");
-    }
+  test("should compare role responses using AgentService", async () => {
+    const agent = AgentFactory.createArticleAgent();
+    const service = new AgentService(agent);
 
-    const structuredResponse = parsedJson.structuredResponse;
+    const comparison = await service.compareRoleResponses(
+      "Write a short article about the benefits of machine learning"
+    );
 
-    // Assert that the parsed response has the expected structure
-    expect(structuredResponse).toBeTypeOf("object");
-    expect(structuredResponse).toHaveProperty("title");
-    expect(structuredResponse).toHaveProperty("subtitle");
-    expect(structuredResponse).toHaveProperty("content");
-    expect(structuredResponse).toHaveProperty("readingTime");
-    expect(structuredResponse).toHaveProperty("date");
-  }, 30000); // 30-second timeout for the agent invocation
+    expect(comparison.beginner).toBeDefined();
+    expect(comparison.expert).toBeDefined();
+    expect(comparison.beginner.structuredResponse).toHaveProperty("title");
+    expect(comparison.expert.structuredResponse).toHaveProperty("title");
+  }, 60000);
+});
+
+describe("Response Parser", () => {
+  test("should parse valid structured response", () => {
+    const mockResult = {
+      messages: [{
+        content: JSON.stringify({
+          structuredResponse: {
+            title: "Test Title",
+            subtitle: "Test Subtitle",
+            content: "Test Content",
+            readingTime: 5,
+            date: "2024-01-01"
+          }
+        })
+      }]
+    };
+
+    const parsed = ResponseParser.parseStructuredResponse(mockResult);
+    expect(parsed.structuredResponse.title).toBe("Test Title");
+  });
+
+  test("should handle invalid JSON gracefully", () => {
+    const mockResult = {
+      messages: [{
+        content: "invalid json"
+      }]
+    };
+
+    expect(() => ResponseParser.parseStructuredResponse(mockResult)).toThrow();
+  });
+
+  test("should return null for safeParseStructuredResponse with invalid data", () => {
+    const mockResult = {
+      messages: [{
+        content: "invalid json"
+      }]
+    };
+
+    const result = ResponseParser.safeParseStructuredResponse(mockResult);
+    expect(result).toBeNull();
+  });
 });

@@ -1,10 +1,11 @@
-import { describe, test, expect } from "vitest";
+/// <reference path="./globals.d.ts" />
+
 import {
   dynamicModelSelection,
   handleToolErrors,
   dynamicSystemPrompt,
   contextSchema,
-} from "../middlewares.js";
+} from "../core/middlewares/index.js";
 
 describe("Agent Middlewares", () => {
   describe("contextSchema", () => {

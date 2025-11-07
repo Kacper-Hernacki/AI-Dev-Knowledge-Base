@@ -1,5 +1,6 @@
-import { describe, test, expect } from "vitest";
-import { basicModel, advancedModel } from "../models.js";
+/// <reference path="./globals.d.ts" />
+
+import { basicModel, advancedModel } from "../config/models.js";
 
 describe("Agent Models", () => {
   describe("basicModel", () => {
