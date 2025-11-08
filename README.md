@@ -26,22 +26,22 @@ ANTHROPIC_API_KEY=...
 
 ## NPM scripts
 
-| Script | Purpose |
-| --- | --- |
-| `npm run dev` | Start the API server with hot reload (`tsx --watch`) |
-| `npm run start` | Start the API server in production mode |
-| `npm run typecheck` | Run TypeScript in `--noEmit` mode |
-| `npm test` | Run the Bun test suite (all lessons) |
-| `npm run test:watch` | Watch mode for Bun tests |
-| `npm run test:all` | Run Bun tests scoped to `lessons/` |
-| `npm run agents:demo` | Execute the LangChain agents demo script |
-| `npm run agents:test` / `npm run agents:test:watch` | Run agent-focused Bun tests |
-| `npm run agents:examples` | Execute agent examples entry point |
-| `npm run models:demo` | Run the models demo |
-| `npm run models:test` / `npm run models:test:watch` | Run model-focused tests |
-| `npm run models:examples` | Execute model examples entry |
-| `npm run lessons:list` | Inspect top-level lesson directories |
-| `npm run lessons:run` | Helper message that explains Bun commands per lesson |
+| Script                                              | Purpose                                              |
+| --------------------------------------------------- | ---------------------------------------------------- |
+| `npm run dev`                                       | Start the API server with hot reload (`tsx --watch`) |
+| `npm run start`                                     | Start the API server in production mode              |
+| `npm run typecheck`                                 | Run TypeScript in `--noEmit` mode                    |
+| `npm test`                                          | Run the Bun test suite (all lessons)                 |
+| `npm run test:watch`                                | Watch mode for Bun tests                             |
+| `npm run test:all`                                  | Run Bun tests scoped to `lessons/`                   |
+| `npm run agents:demo`                               | Execute the LangChain agents demo script             |
+| `npm run agents:test` / `npm run agents:test:watch` | Run agent-focused Bun tests                          |
+| `npm run agents:examples`                           | Execute agent examples entry point                   |
+| `npm run models:demo`                               | Run the models demo                                  |
+| `npm run models:test` / `npm run models:test:watch` | Run model-focused tests                              |
+| `npm run models:examples`                           | Execute model examples entry                         |
+| `npm run lessons:list`                              | Inspect top-level lesson directories                 |
+| `npm run lessons:run`                               | Helper message that explains Bun commands per lesson |
 
 > Most lesson scripts call Bun directly via `bun --env-file=.env ...`. Feel free to substitute a different runner if you prefer, but ensure environment variables are loaded.
 
@@ -97,3 +97,16 @@ The Express server in `src/` gives you a place to expose lesson outputs via REST
 - [LangGraph](https://langchain.dev/langgraph)
 - [Bun Test Runner](https://bun.sh/docs/test)
 - [Express](https://expressjs.com)
+
+## Notes what to include:
+
+- figma make
+- perplexity
+- serp API
+- Graph and Vector DB
+- semantic search
+- file system
+- Deep agent
+- langchain YT materials
+- Hugging face
+- working on images, video, audio, pdf, etc.

@@ -19,6 +19,10 @@
     "messages:test": "bun test lessons/langchain/core-concepts/messages/tests/",
     "messages:test:watch": "bun test --watch lessons/langchain/core-concepts/messages/tests/",
     "messages:examples": "bun --env-file=.env lessons/langchain/core-concepts/messages/examples/index.ts",
+    "tools:demo": "bun --env-file=.env lessons/langchain/core-concepts/tools/demo.ts",
+    "tools:test": "bun test lessons/langchain/core-concepts/tools/tests/",
+    "tools:test:watch": "bun test --watch lessons/langchain/core-concepts/tools/tests/",
+    "tools:examples": "bun --env-file=.env lessons/langchain/core-concepts/tools/examples/index.ts",
     "test": "bun test",
     "test:watch": "bun test --watch",
     "test:all": "bun test lessons/",
@@ -32,6 +36,7 @@
   },
   "dependencies": {
     "@langchain/core": "^1.0.3",
+    "@langchain/langgraph": "^1.0.1",
     "@langchain/openai": "^1.0.0",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.5",
