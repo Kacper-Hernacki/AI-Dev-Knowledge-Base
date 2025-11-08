@@ -13,6 +13,7 @@ export * from "./06-summarize-messages.js";
 export * from "./07-memory-in-tools.js";
 export * from "./08-memory-in-prompts.js";
 export * from "./09-hooks.js";
+export * from "./10-summarization-middleware.js";
 
 /**
  * Run all examples in sequence
@@ -41,7 +42,7 @@ export async function runAllExamples() {
       module: await import("./05-delete-messages.js"),
     },
     {
-      name: "Summarize Messages",
+      name: "Summarize Messages (Manual)",
       module: await import("./06-summarize-messages.js"),
     },
     {
@@ -55,6 +56,10 @@ export async function runAllExamples() {
     {
       name: "Before/After Hooks",
       module: await import("./09-hooks.js"),
+    },
+    {
+      name: "Summarization Middleware (Recommended)",
+      module: await import("./10-summarization-middleware.js"),
     },
   ];
 

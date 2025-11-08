@@ -14,10 +14,11 @@ async function main() {
   console.log("  3. Custom state schemas");
   console.log("  4. Message trimming strategies");
   console.log("  5. Message deletion patterns");
-  console.log("  6. Conversation summarization");
+  console.log("  6. Manual conversation summarization");
   console.log("  7. Memory access in tools");
   console.log("  8. Dynamic prompts from state");
   console.log("  9. Before/after model hooks");
+  console.log(" 10. Summarization middleware (recommended)");
   console.log("\n" + "=".repeat(60));
 
   try {

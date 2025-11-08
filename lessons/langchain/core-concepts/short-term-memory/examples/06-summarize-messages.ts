@@ -1,17 +1,26 @@
 /**
- * Summarize Messages Example
- * Demonstrates using summarization to manage long conversations
+ * Manual Message Summarization Example
+ * Demonstrates implementing custom summarization logic manually
+ *
+ * NOTE: For production use, see 07-summarization-middleware.ts which uses
+ * LangChain's built-in summarizationMiddleware - a cleaner, more maintainable approach.
  */
 
 import { ChatAnthropic } from "@langchain/anthropic";
 import { MemorySaver, MessagesAnnotation, StateGraph } from "@langchain/langgraph";
-import { SystemMessage, HumanMessage, AIMessage } from "@langchain/core/messages";
+import {
+  SystemMessage,
+  HumanMessage,
+  AIMessage,
+  RemoveMessage,
+} from "@langchain/core/messages";
 
 /**
- * Demonstrate message summarization
+ * Demonstrate manual message summarization
+ * This shows how summarization works under the hood
  */
 export async function demonstrateSummarization() {
-  console.log("\n📝 Message Summarization");
+  console.log("\n📝 Manual Message Summarization");
   console.log("=".repeat(50));
 
   const checkpointer = new MemorySaver();
@@ -35,12 +44,17 @@ export async function demonstrateSummarization() {
           `  📊 Summarizing ${messages.length} messages...`
         );
 
+        // Filter out any existing system messages (Anthropic requires system messages only at position 0)
+        const nonSystemMessages = messages.filter(
+          (m) => m._getType() !== "system"
+        );
+
         // Get messages to summarize (exclude last 2 to keep recent context)
-        const toSummarize = messages.slice(0, -2);
+        const toSummarize = nonSystemMessages.slice(0, -2);
 
         // Create summarization prompt
         const summaryPrompt = `Summarize the following conversation concisely:\n\n${toSummarize
-          .map((m) => `${m.getType()}: ${m.content}`)
+          .map((m) => `${m._getType()}: ${m.content}`)
           .join("\n")}`;
 
         const summary = await model.invoke([
@@ -49,13 +63,22 @@ export async function demonstrateSummarization() {
 
         console.log(`  ✅ Created summary`);
 
-        // Replace old messages with summary
+        // Remove ALL messages and add them back in correct order (SystemMessage must be first for Anthropic)
+        const messagesToKeep = nonSystemMessages.slice(-2);
         return {
           messages: [
+            ...nonSystemMessages.map((m) => new RemoveMessage({ id: m.id })),
             new SystemMessage(
               `Previous conversation summary: ${summary.content}`
             ),
-            ...messages.slice(-2),
+            // Re-create the messages we want to keep as new instances
+            ...messagesToKeep.map((m) => {
+              if (m._getType() === "human")
+                return new HumanMessage({ content: m.content });
+              if (m._getType() === "ai")
+                return new AIMessage({ content: m.content });
+              return m;
+            }),
           ],
         };
       }
@@ -171,15 +194,20 @@ export async function demonstrateIncrementalSummarization() {
       if (messages.length > 6) {
         console.log("  📊 Creating incremental summary...");
 
+        // Filter out any existing system messages
+        const nonSystemMessages = messages.filter(
+          (m) => m._getType() !== "system"
+        );
+
         // Get new messages since last summary
-        const newMessages = messages.slice(-4, -2);
+        const newMessages = nonSystemMessages.slice(-4, -2);
 
         const prompt = existingSummary
           ? `Previous summary: ${existingSummary}\n\nNew messages:\n${newMessages
-              .map((m) => `${m.getType()}: ${m.content}`)
+              .map((m) => `${m._getType()}: ${m.content}`)
               .join("\n")}\n\nUpdate the summary to include new information:`
           : `Summarize these messages:\n${newMessages
-              .map((m) => `${m.getType()}: ${m.content}`)
+              .map((m) => `${m._getType()}: ${m.content}`)
               .join("\n")}`;
 
         const summary = await model.invoke([new HumanMessage(prompt)]);
@@ -190,10 +218,20 @@ export async function demonstrateIncrementalSummarization() {
 
         console.log("  ✅ Summary updated");
 
+        // Remove ALL messages and add them back in correct order (SystemMessage must be first for Anthropic)
+        const messagesToKeep = nonSystemMessages.slice(-2);
         return {
           messages: [
+            ...nonSystemMessages.map((m) => new RemoveMessage({ id: m.id })),
             new SystemMessage(`Conversation summary: ${existingSummary}`),
-            ...messages.slice(-2),
+            // Re-create the messages we want to keep as new instances
+            ...messagesToKeep.map((m) => {
+              if (m._getType() === "human")
+                return new HumanMessage({ content: m.content });
+              if (m._getType() === "ai")
+                return new AIMessage({ content: m.content });
+              return m;
+            }),
           ],
         };
       }

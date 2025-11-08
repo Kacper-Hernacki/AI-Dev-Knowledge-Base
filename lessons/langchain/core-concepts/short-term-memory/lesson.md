@@ -504,6 +504,90 @@ if (summarizer.shouldSummarize(messages)) {
 const messagesWithSummary = await summarizer.createMessagesWithSummary(messages);
 ```
 
+### Summarization Middleware (Recommended)
+
+**For production applications, use LangChain's built-in `summarizationMiddleware` instead of manual implementation.**
+
+The middleware approach provides automatic conversation management with minimal code:
+
+```typescript
+import { createAgent, summarizationMiddleware } from "langchain";
+import { MemorySaver } from "@langchain/langgraph";
+
+const checkpointer = new MemorySaver();
+
+const agent = createAgent({
+  model: "claude-3-5-haiku-20241022",
+  tools: [],
+  middleware: [
+    summarizationMiddleware({
+      model: "claude-3-5-haiku-20241022",
+      maxTokensBeforeSummary: 4000,
+      messagesToKeep: 20,
+    }),
+  ],
+  checkpointer,
+});
+
+// Middleware automatically manages conversation length
+const config = { configurable: { thread_id: "conversation_1" } };
+await agent.invoke({ messages: "Tell me about yourself" }, config);
+await agent.invoke({ messages: "What's your favorite topic?" }, config);
+// Summarization happens automatically when needed
+```
+
+**Configuration Options:**
+
+```typescript
+summarizationMiddleware({
+  model: string,                 // Model for generating summaries
+  maxTokensBeforeSummary: number, // Token threshold (default: 4000)
+  messagesToKeep: number,        // Recent messages to preserve (default: 20)
+})
+```
+
+**Combining Multiple Middleware:**
+
+```typescript
+import {
+  createAgent,
+  summarizationMiddleware,
+  humanInTheLoopMiddleware,
+  piiRedactionMiddleware,
+} from "langchain";
+
+const agent = createAgent({
+  model: "claude-3-5-sonnet-20241022",
+  tools: [readEmail, sendEmail],
+  middleware: [
+    // Middleware run in order
+    piiRedactionMiddleware({ patterns: ["email", "phone", "ssn"] }),
+    summarizationMiddleware({
+      model: "claude-3-5-haiku-20241022",
+      maxTokensBeforeSummary: 4000,
+    }),
+    humanInTheLoopMiddleware({
+      interruptOn: { sendEmail: { allowedDecisions: ["approve", "edit", "reject"] } },
+    }),
+  ],
+  checkpointer,
+});
+```
+
+**Manual vs Middleware:**
+
+| Aspect | Manual Implementation | Middleware Approach |
+|--------|----------------------|-------------------|
+| Code | More verbose | Minimal configuration |
+| Maintenance | Custom logic to maintain | Maintained by LangChain |
+| Testing | Need to test custom logic | Battle-tested |
+| Flexibility | Highly customizable | Configurable via params |
+| Use Case | Special requirements | Production standard |
+
+**See examples:**
+- Manual: `examples/06-summarize-messages.ts` (educational)
+- Middleware: `examples/10-summarization-middleware.ts` (recommended)
+
 ## Memory Access
 
 Access and modify memory in different parts of your agent.

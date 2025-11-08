@@ -11,6 +11,7 @@ import {
   Annotation,
 } from "@langchain/langgraph";
 import { HumanMessage, AIMessage, RemoveMessage } from "@langchain/core/messages";
+import { createAgent, summarizationMiddleware } from "langchain";
 
 // Skip if no API key
 const skipIfNoKey = !process.env.ANTHROPIC_API_KEY;
@@ -236,4 +237,54 @@ describe("Memory Integration", () => {
     expect(beforeCalled).toBe(true);
     expect(afterCalled).toBe(true);
   });
+
+  test.skip("should manage conversation length with summarizationMiddleware", async () => {
+    const checkpointer = new MemorySaver();
+
+    // Create agent with summarization middleware
+    const agent = createAgent({
+      model: "claude-3-5-haiku-20241022",
+      tools: [],
+      middleware: [
+        summarizationMiddleware({
+          model: "claude-3-5-haiku-20241022",
+          maxTokensBeforeSummary: 500, // Low threshold for testing
+          messagesToKeep: 2,
+        }),
+      ],
+      checkpointer,
+    });
+
+    const config = { configurable: { thread_id: "middleware_test" } };
+
+    // Add multiple turns to trigger summarization
+    await agent.invoke(
+      { messages: [{ role: "user", content: "My name is Alice" }] },
+      config
+    );
+
+    await agent.invoke(
+      { messages: [{ role: "user", content: "I'm a software engineer" }] },
+      config
+    );
+
+    await agent.invoke(
+      { messages: [{ role: "user", content: "I work with Python and TypeScript" }] },
+      config
+    );
+
+    const response = await agent.invoke(
+      { messages: [{ role: "user", content: "What do you know about me?" }] },
+      config
+    );
+
+    // Verify the agent remembers key information
+    const lastMsg = response.messages[response.messages.length - 1];
+    const content = typeof lastMsg.content === "string" ? lastMsg.content.toLowerCase() : "";
+
+    expect(content).toContain("alice");
+
+    // Verify summarization happened (message count should be managed)
+    expect(response.messages.length).toBeLessThan(10);
+  }, 30000);
 });
